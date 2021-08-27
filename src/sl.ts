@@ -9,4 +9,4 @@ export * as SlRating from '@shoelace-style/shoelace/dist/components/rating/ratin
 export * as SlSelect from '@shoelace-style/shoelace/dist/components/select/select.js'
 import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.js'
 
-setBasePath('/dist/shoelace')
+setBasePath('./dist/shoelace')

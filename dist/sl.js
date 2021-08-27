@@ -6589,7 +6589,7 @@
   });
 
   // src/sl.ts
-  setBasePath("/dist/shoelace");
+  setBasePath("./dist/shoelace");
 })();
 /**
  * @license
