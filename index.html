@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en-HK">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Excel Gen</title>
+  </head>
+  <link rel="stylesheet" href="/dist/sl.css" />
+  <link rel="stylesheet" href="index.css" />
+  <script src="/dist/sl.js"></script>
+  <body>
+    <main>
+      <sl-alert open>
+        <sl-icon slot="icon" name="info-circle"></sl-icon>
+        <h3>
+          请依序完成以下（1、2、3）三个步骤，最后一步 [开始生成表格]
+          会按照模板填写并自动下载填写后的工作簿
+        </h3>
+      </sl-alert>
+      <sl-alert type="danger" class="disclaimer" open>
+        <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+        <p>
+          <span>免责声明</span>
+          <br />
+          上传和下载的文件暂存于用户本地浏览器，并未实际上传到其它服务器；代码<a
+            href="https://github.com/beetcb/excel-template-export"
+            >开源</a
+          >，可审查
+        </p>
+      </sl-alert>
+      <section class="upload steps active" step="1">
+        <label>
+          <sl-button type="default">请上传模板工作簿</sl-button>
+          <input type="file" id="upload-template-btn" name="filename" />
+        </label>
+        <sl-dialog
+          label="请选择模板工作表"
+          class="dialog-overview"
+          id="upload-template-dialog"
+        >
+        </sl-dialog>
+      </section>
+      <section class="steps" step="2">
+        <label>
+          <sl-button type="default">请上传薪资数据工作簿</sl-button>
+          <input type="file" id="upload-btn" name="filename" />
+        </label>
+        <sl-dialog
+          label="请选择数据来源工作表"
+          class="dialog-overview"
+          id="upload-dialog"
+        >
+        </sl-dialog>
+      </section>
+      <section class="process steps" step="3">
+        <sl-button id="process-btn" type="primary">开始生成表格</sl-button>
+      </section>
+      <script src="/dist/index.js"></script>
+    </main>
+  </body>
+</html>
