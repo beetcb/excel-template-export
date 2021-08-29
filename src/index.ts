@@ -1,30 +1,44 @@
-import { read, utils, WorkSheet, writeFile } from 'xlsx'
-import {
-  loopThroughRange,
-  rangeTraverser,
-  rangeTraverserIndexedByAddr,
-} from './utils'
+import Excel from 'exceljs'
+import { excelDownloader, fillSheet, rangeTraverser } from './utils'
 
 import type { SlDialog } from '@shoelace-style/shoelace'
-import type { WorkBook } from 'xlsx'
+import type { Workbook, Worksheet } from 'exceljs'
 
-const [TEMPLATE_RANGE, SOURCE_RANGE] = ['B3:AM37', 'A1:AA22']
+const [TEMPLATE_RANGE, SOURCE_RANGE]: [RangeFilter, RangeFilter] = [
+  {
+    from: { column: 2, row: 3 },
+    to: { column: 39, row: 37 },
+    header: {
+      row: 4,
+      column: 2,
+    },
+  },
+  {
+    from: { column: 1, row: 1 },
+    to: { column: 27, row: 22 },
+    header: {
+      row: 1,
+      column: 1,
+    },
+  },
+]
 
-let template: WorkSheet, source: WorkSheet
-let tWorksheet: WorkSheet, tWorkbook: WorkBook
+let source: HeaderIndexedCell
+let tWorksheet: Worksheet, tWorkbook: Workbook
 
 function handleFile(e, isTemplate: boolean) {
   const f = e.target.files[0]
   const reader = new FileReader()
   reader.onload = async function (e) {
     const data = new Uint8Array(e.target.result as any)
-    const workbook = read(data, { type: 'array', cellText: true })
+    const workbook = new Excel.Workbook()
+    await workbook.xlsx.load(data)
     await (isTemplate ? templateEditor(workbook) : editor(workbook))
   }
   reader.readAsArrayBuffer(f)
 }
 
-async function templateEditor(workbook: WorkBook) {
+async function templateEditor(workbook: Workbook) {
   // Open dialog
   tWorkbook = workbook
   const templateDialog = document.getElementById(
@@ -32,9 +46,11 @@ async function templateEditor(workbook: WorkBook) {
   ) as SlDialog
   templateDialog.innerHTML = `
   <sl-select id="upload-template-dialog-select">
-  ${workbook.SheetNames.map((n) => {
-    return `<sl-menu-item value="${n}">${n}</sl-menu-item>`
-  }).join('')}
+  ${workbook.worksheets
+    .map(({ name: n }) => {
+      return `<sl-menu-item value="${n}">${n}</sl-menu-item>`
+    })
+    .join('')}
   </sl-select>
   <sl-button type="primary" id="upload-template-dialog-close">确认</sl-button>
   `
@@ -52,20 +68,20 @@ async function templateEditor(workbook: WorkBook) {
     const select = document.getElementById(
       'upload-template-dialog-select'
     ) as HTMLSelectElement
-    tWorksheet = tWorkbook.Sheets[select.value]
-    template = rangeTraverserIndexedByAddr(tWorksheet, TEMPLATE_RANGE)
-    console.log(template)
+    tWorksheet = tWorkbook.getWorksheet(select.value)
   }
 }
 
-async function editor(workbook: WorkBook) {
+async function editor(workbook: Workbook) {
   // Open dialog
   const templateDialog = document.getElementById('upload-dialog') as SlDialog
   templateDialog.innerHTML = `
    <sl-select id="upload-dialog-select">
-   ${workbook.SheetNames.map((n) => {
-     return `<sl-menu-item value="${n}">${n}</sl-menu-item>`
-   }).join('')}
+   ${workbook.worksheets
+     .map(({ name: n }) => {
+       return `<sl-menu-item value="${n}">${n}</sl-menu-item>`
+     })
+     .join('')}
    </sl-select>
    <sl-button type="primary" id="upload-dialog-close">确认</sl-button>
    `
@@ -81,30 +97,15 @@ async function editor(workbook: WorkBook) {
     const select = document.getElementById(
       'upload-dialog-select'
     ) as HTMLSelectElement
-    const worksheet = workbook.Sheets[select.value]
+    const worksheet = workbook.getWorksheet(select.value)
     source = rangeTraverser(worksheet, SOURCE_RANGE)
     console.log(source)
   }
 }
 
-function fillSheet() {
-  loopThroughRange(TEMPLATE_RANGE, (c: number, r: number) => {
-    const col = template[c]
-    if (col) {
-      let { rowHeader, colHeader } = template[c][r] ?? {}
-      if (rowHeader && colHeader) {
-        const sourceCol = source[colHeader]
-        if (sourceCol) {
-          const val = sourceCol[rowHeader]
-          const addr = utils.encode_cell({ r, c })
-          tWorksheet[addr] = { v: val }
-        }
-      }
-    }
-  })
-
-  console.log(tWorksheet, tWorkbook)
-  writeFile(tWorkbook, '结果.xlsx')
+function fillIn() {
+  fillSheet(tWorksheet, source, TEMPLATE_RANGE)
+  tWorkbook.xlsx.writeBuffer().then((v) => excelDownloader(v))
 }
 
 // Btn to listen on
@@ -125,4 +126,4 @@ uploadBtn.addEventListener('change', (e) => {
   processBtn.parentElement.classList.add('active')
 })
 
-processBtn.addEventListener('click', fillSheet)
+processBtn.addEventListener('click', fillIn)
