@@ -32855,7 +32855,6 @@
 
   // src/utils.ts
   function rangeTraverser(sheet, range) {
-    sheet.autoFilter = range;
     const { from, to, header } = range;
     const col = {};
     for (let C = from.column; C <= to.column; ++C) {
@@ -32866,7 +32865,7 @@
           continue;
         }
         let rowHeader = getCellHeader(sheet, header.column, R);
-        let { value: v } = sheet.getCell(C, R);
+        let { value: v } = sheet.getCell(R, C);
         if (!someUndefinedOrNull(rowHeader, colHeader, v)) {
           rowHeader = rowHeader.replace(/(\D+)(\d|\w){4}/, (_, g1) => g1);
           rowVals[rowHeader] = v;
